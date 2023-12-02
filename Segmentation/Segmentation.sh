@@ -1,8 +1,5 @@
 #!/bin/bash
 
-# Print current working directory
-pwd
-
 # Move test.jpg to U_2_Net/test_data/test_images
 cp ./test.jpg ./U_2_Net/test_data/test_images/
 
