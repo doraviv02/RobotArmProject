@@ -40,7 +40,8 @@ def start():
             image_rgb = cv2.cvtColor(color_image, cv2.COLOR_BGR2RGB)
             arucoDict = cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_4X4_50)
             arucoParams = cv2.aruco.DetectorParameters()
-            (corners, ids, rejected) = cv2.aruco.ArucoDetector.detectMarkers(image_rgb, arucoDict,parameters=arucoParams)
+            detector = cv2.aruco.ArucoDetector(arucoDict,arucoParams)
+            (corners, ids, rejected) = detector.detectMarkers(image_rgb)
 
 
             # Corner order: 0- Top left, 1-top right, 2-bottom right, 3- bottom left (clockwise)
