@@ -44,8 +44,9 @@ def segfunc(filename):
             new_image = original_image.copy()
             mask = ((labels==i)*255).astype(np.uint8)
             new_image = cv2.bitwise_and(new_image,new_image, mask= mask)
-            segmented.append(new_image)
             #cv2.imshow("filtered " +str(i) ,new_image)
+            segmented.append(new_image)
+
             #print(new_image[new_image[:,:,0]!=0][:,0])
             avg_red = np.average(new_image[new_image[:,:,1]!=0][:,1])
             #print("average green: "+str(avg_red))
@@ -60,3 +61,4 @@ def segfunc(filename):
 
     return segmented
 
+segfunc("test.jpg")

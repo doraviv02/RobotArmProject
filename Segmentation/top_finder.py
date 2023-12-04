@@ -11,10 +11,8 @@ def find_centroids(dst):
     # find centroids
     ret, labels, stats, centroids = cv2.connectedComponentsWithStats(dst)
     # define the criteria to stop and refine the corners
-    criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 100,
-                0.001)
-    corners = cv2.cornerSubPix(gray,np.float32(centroids),(5,5),
-              (-1,-1),criteria)
+    criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 100, 0.001)
+    corners = cv2.cornerSubPix(gray,np.float32(centroids), (5, 5), (-1, -1), criteria)
     return corners
 
 def up(points):
@@ -66,20 +64,72 @@ def up(points):
 
     return top_four
 
-filename = 'test.png'
+def contours(blocks):
+    contours = []
+    for block in blocks:
+        #prep contour
+        gray = cv2.cvtColor(block, cv2.COLOR_BGR2GRAY)
+        contour, _ = cv2.findContours(gray, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+        contours.append(contour)
+
+        cv2.drawContours(block, contour, -1, (0, 255, 0), 3)
+        #cv2.imshow('test', block)
+
+    return contours
+
+def contour2poly(contours):
+    polys = []
+
+    for contour in contours:
+        epsilon = 2*cv2.arcLength(contour[0], True)
+        poly = cv2.approxPolyDP(contour[0], epsilon, True)
+
+        while len(poly)!= 6:
+            epsilon*=0.9
+            poly = cv2.approxPolyDP(contour[0], epsilon, True)
+
+        blank = np.zeros_like(seg_blocks[0])
+        cv2.drawContours(blank, [poly], -1, (255, 255, 255), cv2.FILLED)
+        blank = cv2.cvtColor(blank, cv2.COLOR_BGR2GRAY)
+
+        polys.append(blank)
+        cv2.imshow('testing', blank)
+        cv2.waitKey(0)
+        cv2.destroyAllWindows()
+
+        polys.append(poly)
+
+    return polys
+
+filename = 'test.jpg'
 seg_blocks = segfunc(filename)
+contours = contours(seg_blocks)
+
+con_img = []
+for contour in contours:
+    blank = np.zeros_like(seg_blocks[0])
+    cv2.drawContours(blank, contour, -1, (255, 255, 255), 2)
+    blank = cv2.cvtColor(blank, cv2.COLOR_BGR2GRAY)
+    con_img.append(blank)
+    cv2.imshow('testing', blank)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
+
+polys = contour2poly(contours)
 
 #running on each segmented block
-for img in seg_blocks:
+for img in polys:
     # cv2.imshow('Original image', img)
-    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    gray = np.float32(gray)
+    #gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    gray = np.float32(img)
     #dst = cv2.cornerHarris(gray, 2, 3, 0.04)
-    corners = cv2.goodFeaturesToTrack(gray, 6, 0.1, 20)
+    corners = cv2.goodFeaturesToTrack(gray, 6, 0.01, 10)
+
+    if corners is not None and len(corners) > 6:
+        corners = corners[:6]
 
     #corners = find_centroids(dst)
     #corners = np.delete(corners,0, axis=0)
-
     corners_coor = []
 
     #converting corner's dtype
@@ -92,7 +142,7 @@ for img in seg_blocks:
     for corner in corners_coor:
        cv2.circle(img,(int(corner[0]), int(corner[1])), 5, (255,0,0), -1)
 
-    cv2.imshow('Found Corners', img)
+    #cv2.imshow('Found Corners', img)
 
     points = corners_coor
     top = up(np.array(points))
