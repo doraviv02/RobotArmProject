@@ -29,6 +29,7 @@ cv2.imshow('false_colors', false_colors)
 
 MIN_AREA = 50
 false_colors_draw = false_colors.copy()
+print(centroids[1:])
 for i, centroid in enumerate(centroids[1:], start=1):
     area = stats[i, 4]
     if area > MIN_AREA:
