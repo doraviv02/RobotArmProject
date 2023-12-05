@@ -86,13 +86,9 @@ def start():
             key = cv2.waitKey(1)
             if key == ord('q'):
                 # Capturing Image for
-                cv2.imwrite('output.jpg',dst)
+                cv2.imwrite('camera_output.jpg',dst)
                 break
     finally:
         pipeline.stop()
         cv2.destroyAllWindows()
-
-
-
-
-start()
+        return M
