@@ -81,18 +81,22 @@ def contour2poly(contours):
     polys = []
 
     for contour in contours:
-        epsilon = 2*cv2.arcLength(contour[0], True)
+        epsilon = cv2.arcLength(contour[0], True)
         poly = cv2.approxPolyDP(contour[0], epsilon, True)
-
+        count = 0
         while len(poly)!= 6:
             epsilon*=0.9
             poly = cv2.approxPolyDP(contour[0], epsilon, True)
+            if count == 100:
+                break
+            count += 1
+
+        polys.append(poly)
 
         blank = np.zeros_like(seg_blocks[0])
         cv2.drawContours(blank, [poly], -1, (255, 255, 255), 3)
         blank = cv2.cvtColor(blank, cv2.COLOR_BGR2GRAY)
 
-        polys.append(poly)
         cv2.imshow('testing', blank)
         cv2.waitKey(0)
         cv2.destroyAllWindows()
@@ -100,7 +104,7 @@ def contour2poly(contours):
 
     return polys
 
-filename = 'test.jpg'
+filename = 'binary.jpg'
 seg_blocks = segfunc(filename)
 contours = contours(seg_blocks)
 
@@ -115,9 +119,11 @@ for contour in contours:
     cv2.destroyAllWindows()
 
 polys = contour2poly(contours)
-
+print(polys[0])
+print(polys[1])
 #running on each segmented block
 for poly in polys:
+
     # cv2.imshow('Original image', img)
     #gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     #gray = np.float32(img)
