@@ -9,8 +9,8 @@ def start():
     # Open Camera Stream
     pipeline = rs.pipeline()
     config = rs.config()
-    config.enable_stream(rs.stream.depth, 640, 480, rs.format.z16, 30)
-    config.enable_stream(rs.stream.color, 640, 480, rs.format.rgb8, 30)
+    #config.enable_stream(rs.stream.depth, 640, 480, rs.format.z16, 15)
+    config.enable_stream(rs.stream.color, 1280, 720, rs.format.rgb8, 15)
     align_to = rs.stream.color
     align = rs.align(align_to)
     pipeline.start(config)
@@ -53,9 +53,9 @@ def start():
 
             # Projection of shape to rectangular image
             pts1 = np.float32([src[0], src[1], src[3], src[2]])
-            pts2 = np.float32([[0, 0], [520, 0], [0, 260], [520, 260]])
+            pts2 = 2*np.float32([[0, 0], [520, 0], [0, 260], [520, 260]])
             M = cv2.getPerspectiveTransform(pts1, pts2)
-            dst = cv2.warpPerspective(image_rgb, M, (520, 260))
+            dst = cv2.warpPerspective(image_rgb, M, (2*520, 2*260))
 
             # Hard Coded filter to detect tan and red blocks
             cv2.imshow("Red Channel", dst[:, :, 0])
