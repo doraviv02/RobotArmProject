@@ -89,14 +89,13 @@ def contour2poly(contours):
             poly = cv2.approxPolyDP(contour[0], epsilon, True)
 
         blank = np.zeros_like(seg_blocks[0])
-        cv2.drawContours(blank, [poly], -1, (255, 255, 255), cv2.FILLED)
+        cv2.drawContours(blank, [poly], -1, (255, 255, 255), 3)
         blank = cv2.cvtColor(blank, cv2.COLOR_BGR2GRAY)
 
-        polys.append(blank)
+        polys.append(poly)
         cv2.imshow('testing', blank)
         cv2.waitKey(0)
         cv2.destroyAllWindows()
-
         polys.append(poly)
 
     return polys
@@ -118,41 +117,39 @@ for contour in contours:
 polys = contour2poly(contours)
 
 #running on each segmented block
-for img in polys:
+for poly in polys:
     # cv2.imshow('Original image', img)
     #gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    gray = np.float32(img)
+    #gray = np.float32(img)
     #dst = cv2.cornerHarris(gray, 2, 3, 0.04)
-    corners = cv2.goodFeaturesToTrack(gray, 6, 0.01, 10)
+    #corners = cv2.goodFeaturesToTrack(gray, 6, 0.01, 10)
 
-    if corners is not None and len(corners) > 6:
-        corners = corners[:6]
+    #if corners is not None and len(corners) > 6:
+    #    corners = corners[:6]
 
     #corners = find_centroids(dst)
     #corners = np.delete(corners,0, axis=0)
     corners_coor = []
 
     #converting corner's dtype
-    for corner in corners:
+    for corner in poly:
         x, y = corner[0]
         x_int, y_int = int(round(x)), int(round(y))
         corners_coor.append([x_int, y_int])
 
     # To draw the corners
-    for corner in corners_coor:
-       cv2.circle(img,(int(corner[0]), int(corner[1])), 5, (255,0,0), -1)
+    blank = np.zeros_like(seg_blocks[0])
+    cv2.drawContours(blank, poly, -1, (255, 255, 255), 3)
+    blank = cv2.cvtColor(blank, cv2.COLOR_BGR2GRAY)
+    cv2.imshow('First blank', blank)
 
-    #cv2.imshow('Found Corners', img)
 
-    points = corners_coor
-    top = up(np.array(points))
-    for point in top:
-       cv2.circle(img,(int(point[0]), int(point[1])), 5, (0, 0, 255), -1)
+    top = up(np.array(corners_coor))
 
     top_rs = top.reshape((-1, 1, 2)).astype(int)
-    cv2.fillPoly(img, [top_rs], (0, 255, 0))
+    cv2.fillPoly(blank, [top_rs], (255, 255, 255))
 
-    cv2.imshow('Predicted top', img)
+    cv2.imshow('Predicted top', blank)
     cv2.waitKey(0)
     cv2.destroyAllWindows()
 
