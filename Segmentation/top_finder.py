@@ -29,16 +29,18 @@ def up(points):
 
     right_offset = tr - br
     left_offset = tl - bl
+    mean_offset = np.mean([right_offset, left_offset], axis=0)
 
     mid_corners = np.delete(xtemp, [0, 1, 4, 5], axis=0)
 
     lowest_mid = mid_corners[np.argmax(mid_corners[:,1])]
     top_mid = mid_corners[np.argmin(mid_corners[:,1])]
-    lost_corner = lowest_mid + (np.array(right_offset) + np.array(left_offset))/2
+    lost_corner = lowest_mid + mean_offset
 
     top_four = np.array([lost_corner, tl, top_mid, tr])
 
-    return top_four
+    # return top_four, np.mean([right_offset, left_offset])
+    return top_four, mean_offset
 
 def contours(blocks):
     contours = []
@@ -90,6 +92,7 @@ def run(blocks):
 
     polys = contour2poly(contour_list, np.array(blocks[0]).shape)
     centers = []
+    means = []
     #running on each segmented block
     for poly in polys:
         corners_coor = []
@@ -107,15 +110,15 @@ def run(blocks):
         cv2.imshow('First blank', blank)
 
 
-        top = up(np.array(corners_coor))
+        top, mean_offset = up(np.array(corners_coor))
 
         top_rs = top.reshape((-1, 1, 2)).astype(int)
         cv2.fillPoly(blank, [top_rs], (255, 255, 255))
         # centers.append(top.tolist())
         centers.append(top.tolist())
-
+        means.append(mean_offset)
         cv2.imshow('Predicted top', blank)
         cv2.waitKey(0)
         cv2.destroyAllWindows()
 
-    return(centers)
+    return(centers, means)

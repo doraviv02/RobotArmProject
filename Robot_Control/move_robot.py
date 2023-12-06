@@ -30,7 +30,13 @@ transformed_points = np.squeeze(cv2.perspectiveTransform(centroids.reshape(-1,1,
 #print(transformed_points)
 print(*transformed_points[0])
 arm.clean_error()
-arm.set_position_aa([*transformed_points[0],120,180,0,0],wait=True)
+#arm.set_position_aa([*transformed_points[0],120,180,0,0],wait=True)
+
+for tpoint in transformed_points:
+    arm.set_position_aa([tpoint,120,180,0,0],wait=True)
+    arm.set_position_aa([tpoint, 0, 180, 0, 0], wait=True)
+    arm.clean_error()
+    #vac on
 
 # arm.get_init
 # id2_br_x = -4.7 #offset in x from bottom right of id1
