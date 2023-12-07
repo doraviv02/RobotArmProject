@@ -50,7 +50,7 @@ for set in range(len(corners)):
     transformed_points = np.squeeze(
     cv2.perspectiveTransform(np.array(corners[set]).reshape(-1, 1, 2), M_table_to_robot))
     center_transformed = np.average(transformed_points, axis=0)
-    center_transformed[0] +=  0.43 * length
+    center_transformed[0] +=  0.40 * length
     center_transformed[1] +=  0.20 * h_means[set][0]
     centers.append(center_transformed)
 
