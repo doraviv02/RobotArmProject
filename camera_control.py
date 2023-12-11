@@ -5,6 +5,19 @@ import numpy as np
 import cv2
 from skimage.transform import ProjectiveTransform
 import matplotlib.pyplot as plt
+
+def calib(img):
+    dist = np.load('./Camera_Calibration/dist.npy')
+    mtx = np.load('./Camera_Calibration/mtx.npy')
+    h, w = img.shape[:2]
+    newcameramtx, roi = cv2.getOptimalNewCameraMatrix(mtx, dist, (w, h), 1, (w, h))
+
+    # undistort
+    dst = cv2.undistort(img, mtx, dist, None, newcameramtx)
+    # crop the image
+    x, y, w, h = roi
+    dst = dst[y:y + h, x:x + w]
+    return dst
 def start():
     # Open Camera Stream
     pipeline = rs.pipeline()
@@ -38,6 +51,7 @@ def start():
             color_image = np.asanyarray(color_frame.get_data())
             # Display the color image using OpenCV
             image_rgb = cv2.cvtColor(color_image, cv2.COLOR_BGR2RGB)
+            #image_rgb = calib(image_rgb)
             arucoDict = cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_4X4_50)
             arucoParams = cv2.aruco.DetectorParameters()
             detector = cv2.aruco.ArucoDetector(arucoDict,arucoParams)
@@ -86,9 +100,11 @@ def start():
             key = cv2.waitKey(1)
             if key == ord('q'):
                 # Capturing Image for
-                cv2.imwrite('camera_output.jpg',dst)
+                cv2.imwrite('camera_output.jpg', dst)
                 break
     finally:
         pipeline.stop()
         cv2.destroyAllWindows()
+        print('here')
+        print(M)
         return M

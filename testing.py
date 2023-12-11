@@ -2,7 +2,7 @@ import numpy as np
 import cv2
 
 
-img = cv2.imread("camera_output.jpg")
+img = cv2.imread("Camera_Calibration/camera_chess_output.jpg")
 gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 bilateral = cv2.bilateralFilter(gray, 5, 75, 75)
 

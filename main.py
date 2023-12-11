@@ -34,8 +34,8 @@ if run_again:
 # Separate Instances
 blocks = find_instances.run("camera_output.jpg", "./Segmentation/camera_output.png")
 
-corners,h_means = top_finder.run(blocks)
 M_table_to_robot = find_robot_transformation()
+corners,h_means = top_finder.run(blocks,M_table_to_robot)
 
 # print(tops)
 # for top in tops:
@@ -50,8 +50,8 @@ for set in range(len(corners)):
     transformed_points = np.squeeze(
     cv2.perspectiveTransform(np.array(corners[set]).reshape(-1, 1, 2), M_table_to_robot))
     center_transformed = np.average(transformed_points, axis=0)
-    center_transformed[0] +=  0.40 * length
-    center_transformed[1] +=  0.20 * h_means[set][0]
+    # center_transformed[0] +=  0.40 * length
+    # center_transformed[1] +=  0.20 * h_means[set][0]
     centers.append(center_transformed)
 
 for center in centers[1:]:
