@@ -3,6 +3,7 @@ import argparse
 import pyrealsense2 as rs
 import numpy as np
 import cv2
+import time
 from skimage.transform import ProjectiveTransform
 import matplotlib.pyplot as plt
 
@@ -72,9 +73,9 @@ def start():
             dst = cv2.warpPerspective(image_rgb, M, (2*520, 2*260))
 
             # Hard Coded filter to detect tan and red blocks
-            cv2.imshow("Red Channel", dst[:, :, 0])
+            #cv2.imshow("Red Channel", dst[:, :, 0])
 
-            cv2.imshow("Transformation", dst)
+            #cv2.imshow("Transformation", dst)
 
             # edge image
             # edge_img = cv2.Canny(cv2.cvtColor(dst, cv2.COLOR_BGR2GRAY), 120, 150)
@@ -92,19 +93,15 @@ def start():
 
             cv2.imshow("Color Frame", image_rgb)
 
-
-
-
-
             # Detect closing frame
             key = cv2.waitKey(1)
-            if key == ord('q'):
-                # Capturing Image for
+
+            if (np.array(ids).flatten().size ==4):
+            # Capturing Image for
                 cv2.imwrite('camera_output.jpg', dst)
                 break
+
     finally:
         pipeline.stop()
         cv2.destroyAllWindows()
-        print('here')
-        print(M)
         return M
