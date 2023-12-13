@@ -23,19 +23,18 @@ def find_robot_transformation():
     return (cv2.getPerspectiveTransform(border, points))
 
 def main():
-    run_again = True
-    if run_again:
-        # Run Camera Module, Get the transformation matrix from camera to aruco outline
-        M_camera = camera_control.start()
 
-        # Run the U_2_Net model
-        u2net.main()
+    # Run Camera Module, Get the transformation matrix from camera to aruco outline
+    M = camera_control.start()
+
+    # Run the U_2_Net model
+    u2net.main()
 
     # Separate Instances
     blocks = find_instances.run("camera_output.jpg", "./Segmentation/camera_output.png")
 
     M_table_to_robot = find_robot_transformation()
-    corners,h_means,six_flag = top_finder.run(blocks,M_table_to_robot)
+    corners,h_means = top_finder.run(blocks,M_table_to_robot)
 
     # print(tops)
     # for top in tops:
@@ -66,13 +65,16 @@ def main():
         randy = np.random.randint(-190, 190)
         randrz = np.random.randint(0, 45)
         for i in range(len(centers)-1):
-            flag_close.append( (randx-centers[i][0] < 60) and (randy-centers[i][1] < 60) or(randy-centers[i][1] < 70) )
-        if np.any(flag_close):
+            flag_close.append( (randx-centers[i][0] < 45) and (randy-centers[i][1] < 70))
+        if np.any(flag_close) or (len(centers) == 1):
             break
 
     rand_place = np.array([randx, randy])
 
     block_stack.stack_func(centers[0], rand_place, randrz)
+
+M = None
+
 while True:
     main()
 

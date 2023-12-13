@@ -8,6 +8,10 @@ def find_y_diff(center_x, center_y, m, b):
     y_line = m * center_x + b
     return (y_line - center_y)
 
+def pix2cam(center, M):
+    center_in_robotsys = np.squeeze(cv2.perspectiveTransform(np.array(center, dtype=np.float32).reshape(-1, 1, 2), M))
+    center_in_camsys = -np.array([center_in_robotsys[0] - 610, center_in_robotsys[1]])  # in mm
+    return center_in_camsys
 
 def slope_and_intercept(x1, y1, x2, y2):
     m = (y2 - y1) / (x2 - x1)
@@ -64,15 +68,20 @@ def merge_similar_lines(parameters, lines):
     return merged_parameters
 
 
-def classify_box(contour, centroid):
+def classify_box(contour, centroid, M):
     linesP = cv2.HoughLinesP(contour, 1, np.pi / 180, 30, None, 30, 10)
     parameters = np.array([extract_parameters(*linesP.squeeze(axis=1)[i]) for i in range(len(linesP))])
+
+    centroid_camera = pix2cam(centroid, M)
+    centroid_angle = np.arctan(centroid_camera[1]/centroid_camera[0])*180/np.pi
 
     # Remove verticals, find average vertical vector
     vertical_parameters = np.array([])
     i = 0
     while (i < len(linesP)):
-        if (np.abs(parameters[i][1]) < 20 or np.abs(parameters[i][1] - 180) < 20):
+        #angle= 90-np.arctan(-parameters[i][2])
+        #if (np.abs(parameters[i][1]) < 20 or np.abs(parameters[i][1] - 180) < 20):
+        if (np.abs(-parameters[i][1]-centroid_angle) < 20 or np.abs(-parameters[i][1] - 180-centroid_angle) < 20):
             vertical_parameters = np.append(vertical_parameters, parameters[i])
             parameters = np.delete(parameters, i, 0)
             linesP = np.delete(linesP, i, 0)
@@ -100,6 +109,16 @@ def classify_box(contour, centroid):
     top_parameters = np.array(np.flip(np.array(top_parameters), axis=0))
     top_linesP = np.array(np.flip(np.array(top_linesP), axis=0))
 
+    # blank = np.zeros_like(contour)
+    # for l in top_linesP:
+    #     cv2.line(blank, (l[0], l[1]), (l[2], l[3]), (255, 255, 255), 3, cv2.LINE_AA)
+    # for l in linesP:
+    #     cv2.line(blank, (l[0][0], l[0][1]), (l[0][2], l[0][3]), (255, 255, 255), 3, cv2.LINE_AA)
+    #
+    # cv2.imshow("top", blank)
+    # cv2.waitKey(0)
+    # cv2.destroyAllWindows()
+
     merged_parameters_bottom = merge_similar_lines(parameters, linesP)
     merged_parameters_top = merge_similar_lines(top_parameters, top_linesP)
 
@@ -107,9 +126,9 @@ def classify_box(contour, centroid):
     # TODO: possibly calculate top section based on the bottom and vertical lines.
 
     if (len(merged_parameters_bottom) == 1):  # block in front of camera
-        return 1, (merged_parameters_bottom[0] + 2 * merged_parameters_top[0]) / 3
+        return 1, (2*merged_parameters_bottom[0] + 2 * merged_parameters_top[0]) / 4
     elif (len(merged_parameters_bottom) == 2):  # block angled from camera
         return 2, None
     else:
-        print("Error, wrong classification")
-        return None, None
+        print("Warning: imperfect classification")
+        return 2, None

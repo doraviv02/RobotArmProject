@@ -107,7 +107,7 @@ def run(blocks, M):
         contour_block = np.zeros_like(block)
         contour_block = cv2.drawContours(contour_block, contour_list[idx][0], -1, (255, 255, 255), 3)
 
-        classification, line = find_edges.classify_box(contour_block, centroid_list[idx])
+        classification, line = find_edges.classify_box(contour_block, centroid_list[idx], M)
 
         if classification == 1:
             m, b = line[2], line[3]
@@ -128,28 +128,35 @@ def run(blocks, M):
             poly_top = contour2poly(top_contour, 4, True)
             poly_bottom = contour2poly(bottom_contour, 4, True)
 
-            corners_list.append(np.around(poly_top[:, 0]).astype(np.float64).tolist())
-            bottom_points = np.sort(np.around(poly_bottom[:, 0]).astype(np.uint8))
-            avg_vector = ((bottom_points[2]+bottom_points[3])-(bottom_points[0]+bottom_points[1]))*0.5
-            mean_height_offsets.append(avg_vector)
             blank = np.zeros_like(block)
-            # cv2.drawContours(blank, poly_top, -1, (255, 255, 255), 3)
-            # cv2.drawContours(blank, poly_bottom, -1, (255,255, 255), 3)
+            cv2.drawContours(blank, poly_top, -1, (255, 255, 255), 3)
+            cv2.drawContours(blank, poly_bottom, -1, (255, 255, 255), 3)
             # cv2.imshow('First blank', blank)
             # cv2.waitKey(0)
             # cv2.destroyAllWindows()
 
+            corners_list.append(np.around(poly_top[:, 0]).astype(np.float64).tolist())
+            bottom_points = sorted(np.around(poly_bottom[:, 0]).astype(int), key=lambda x: x[0])
+            left_points = sorted(bottom_points[:2], key=lambda x: x[1])
+            right_points = sorted(bottom_points[2:], key=lambda x: x[1])
+            avg_vector = np.multiply((left_points[0] - left_points[1] + right_points[0] - right_points[1]), 0.5)
+            #avg_vector = ((bottom_points[2]+bottom_points[3])-(bottom_points[0]+bottom_points[1]))*0.5
+            mean_height_offsets.append(avg_vector)
+            blank = np.zeros_like(block)
+
+
 
         elif classification == 2:
             poly = contour2poly(contour_list[idx][0])
-            blank = np.zeros_like(block)
-            cv2.drawContours(blank, poly, -1, (255, 255, 255), 3)
-            cv2.imshow('First blank', blank)
-
-            poly_corners = np.around(poly[:, 0]).astype(np.uint8)
+            # blank = np.zeros_like(block)
+            # cv2.drawContours(blank, poly, -1, (255, 255, 255), 3)
+            # cv2.imshow('First blank', blank)
+            # cv2.waitKey(0)
+            # cv2.destroyAllWindows()
+            poly_corners = np.around(poly[:, 0]).astype(int)
             top, mean_height_offset = up(poly_corners)
             top_rs = top.reshape((-1, 1, 2)).astype(int)
-            cv2.fillPoly(blank, [top_rs], (255, 255, 255))
+            #cv2.fillPoly(blank, [top_rs], (255, 255, 255))
             corners_list.append(top.tolist())
             mean_height_offsets.append(mean_height_offset)
 
