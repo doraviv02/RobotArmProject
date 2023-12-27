@@ -22,61 +22,57 @@ def find_robot_transformation():
     border = np.float32([[0, 0], [1040, 0], [0, 520], [1040, 520]])
     return (cv2.getPerspectiveTransform(border, points))
 
+
 def main():
-
     # Run Camera Module, Get the transformation matrix from camera to aruco outline
-    M = camera_control.start()
-
-    # Run the U_2_Net model
-    u2net.main()
-
-    # Separate Instances
-    blocks = find_instances.run("camera_output.jpg", "./Segmentation/camera_output.png")
-
+    M = camera_control.detect_aruco()
     M_table_to_robot = find_robot_transformation()
-    corners,h_means = top_finder.run(blocks,M_table_to_robot)
+    #M = camera_control.start()
 
-    # print(tops)
-    # for top in tops:
-    #     res = cv2.perspectiveTransform(top, M_table_to_robot)
-    #     print(res)
-    #
-    # cv2.waitKey(0)
-    # cv2.destroyAllWindows()
-    centers = []
-    for set in range(len(corners)):
-        length = np.sqrt(h_means[set][0] ** 2) + np.sqrt(h_means[set][1] ** 2)
-        center = np.average(corners[set], axis=0) - h_means[set]
-        transformed_points = np.squeeze(cv2.perspectiveTransform(np.array(center).reshape(-1, 1, 2), M_table_to_robot))
-        #transformed_points = np.squeeze(cv2.perspectiveTransform(np.array(center).reshape(-1, 1, 2), M_table_to_robot))
-        #center_transformed = np.average(transformed_points, axis=0)
-        # center_transformed[0] +=  0.40 * length
-        # center_transformed[1] +=  0.20 * h_means[set][0]
-        centers.append(transformed_points)
-
-    #for center in centers[1:]:
-    #    block_stack.stack_func(center, centers[0])
-
-    #randx = centers[1][0]
-    #randy = centers[1][1]
-    flag_close = []
     while True:
-        randx = np.random.randint(200, 300)
-        randy = np.random.randint(-190, 190)
-        randrz = np.random.randint(0, 45)
-        for i in range(len(centers)-1):
-            flag_close.append( (randx-centers[i][0] < 45) and (randy-centers[i][1] < 70))
-        if np.any(flag_close) or (len(centers) == 1):
-            break
 
-    rand_place = np.array([randx, randy])
+        # Save transformed image
+        camera_control.transform_image(M)
 
-    block_stack.stack_func(centers[0], rand_place, randrz)
+        # Run the U_2_Net model
+        u2net.main()
 
-M = None
+        # Separate Instances
+        blocks = find_instances.run("camera_output.jpg", "./Segmentation/camera_output.png")
 
-while True:
-    main()
+        corners,h_means = top_finder.run(blocks,M_table_to_robot)
+
+
+        centers = []
+        for set in range(len(corners)):
+            center = np.average(corners[set], axis=0) - h_means[set]
+            transformed_points = np.squeeze(cv2.perspectiveTransform(np.array(center).reshape(-1, 1, 2), M_table_to_robot))
+            #transformed_points = np.squeeze(cv2.perspectiveTransform(np.array(center).reshape(-1, 1, 2), M_table_to_robot))
+            #center_transformed = np.average(transformed_points, axis=0)
+            # center_transformed[0] +=  0.40 * length
+            # center_transformed[1] +=  0.20 * h_means[set][0]
+            centers.append(transformed_points)
+
+        flag_close = []
+        while True:
+            randx = np.random.randint(170, 300)
+            randy = np.random.randint(-200, 200)
+            randrz = np.random.randint(0, 90)
+
+            for center in centers[1:]:
+                flag_close.append((np.abs(randx-center[0]) > 30) and (np.abs(randy-center[1]) > 30))
+            # for i in range(1, len(centers)):
+            #     #print("randx: " + str(randx) + " center x : " + str(centers[i][0]))
+            #     flag_close.append( (np.abs(randx-centers[i][0]) > 45) and (np.abs(randy-centers[i][1]) > 70))
+            if np.any(flag_close) or (len(centers) == 1):
+                break
+
+        rand_place = np.array([randx, randy])
+
+        block_stack.stack_func(centers[0], rand_place, randrz)
+
+
+main()
 
 # for set in range(len(corners)):
 #     length = np.sqrt(h_means[set][0]**2)+np.sqrt(h_means[set][1]**2)
