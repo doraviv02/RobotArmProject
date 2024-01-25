@@ -8,12 +8,13 @@ import Segmentation.find_instances as find_instances
 import Segmentation.top_finder as top_finder
 import Robot_Control.block_stack as block_stack
 import sys
-
+from datetime import datetime, timezone
 from xarm.wrapper import XArmAPI
 
 #arm = XArmAPI('COM5')
 arm = XArmAPI('192.168.1.165')
 arm.connect()
+
 
 def find_robot_transformation():
     # top left, top right, bottom left, bottom right
@@ -25,14 +26,14 @@ def find_robot_transformation():
 
 def main():
     # Run Camera Module, Get the transformation matrix from camera to aruco outline
-    M = camera_control.detect_aruco()
-    M_table_to_robot = find_robot_transformation()
+    #M, top_points = camera_control.detect_aruco()
+    #M_table_to_robot = find_robot_transformation()
     #M = camera_control.start()
 
     while True:
 
         # Save transformed image
-        camera_control.transform_image(M)
+        camera_control.transform_image(M, True)
 
         # Run the U_2_Net model
         u2net.main()
@@ -55,8 +56,8 @@ def main():
 
         flag_close = []
         while True:
-            randx = np.random.randint(170, 300)
-            randy = np.random.randint(-200, 200)
+            randx = np.random.randint(200, 300)
+            randy = np.random.randint(-170, 170)
             randrz = np.random.randint(0, 90)
 
             for center in centers[1:]:
@@ -69,23 +70,30 @@ def main():
 
         rand_place = np.array([randx, randy])
 
-        block_stack.stack_func(centers[0], rand_place, randrz)
+        row_threshold = int(np.average([top_points[0][1], top_points[1][1]]))
+        cols_threshold = np.array([int(top_points[0][0]), int(top_points[1][0])])
 
+        is_picked = block_stack.stack_func(centers[0], rand_place, randrz, row_threshold, cols_threshold)
+        if (is_picked is not None):
+            success.append(int(is_picked))
+            np.savetxt('data_'+current_Time+'.csv', np.array(success),  fmt='%i', delimiter=',')
 
-main()
+        block_stack.complete_clean()
+        block_stack.set_initial_position()
 
-# for set in range(len(corners)):
-#     length = np.sqrt(h_means[set][0]**2)+np.sqrt(h_means[set][1]**2)
-#     transformed_points = np.squeeze(cv2.perspectiveTransform(np.array(corners[set]).reshape(-1, 1, 2), M_table_to_robot))
-#     center_transformed = np.average(transformed_points, axis=0)
-#     center_transformed[0] = center_transformed[0] + 0.40*length
-#     arm.set_position_aa([*center_transformed, 120, 180, 0, 0], wait=True)
-# for set in corners:
-#     transformed_points = np.squeeze(cv2.perspectiveTransform(np.array(set).reshape(-1, 1, 2), M_table_to_robot))
-#     center_transformed = np.average(transformed_points, axis=0)
-#     center_transformed[0] = center_transformed[0]+25
-#     print(center_transformed)
-#     arm.set_position_aa([*center_transformed, 120, 180, 0, 0], wait=True)
-# print(corners)
-# initial_position = [200,0,200,180,0,0]
-# arm.set_position_aa(initial_position,wait=True)
+current_Time = str(datetime.now(timezone.utc))[:-13]
+success = []
+
+M, top_points = camera_control.detect_aruco()
+M_table_to_robot = find_robot_transformation()
+
+while (True):
+    block_stack.complete_clean()
+    block_stack.set_initial_position()
+    try:
+        main()
+    except Exception:
+        #TODO: add clean errors and such
+        # block_stack.complete_clean()
+        # block_stack.set_initial_position()
+        pass

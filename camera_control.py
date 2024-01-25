@@ -87,10 +87,10 @@ def detect_aruco():
     finally:
         pipeline.stop()
         cv2.destroyAllWindows()
-        return M
+        return M, [pts1[0],pts1[1]]
 
 
-def transform_image(M):
+def transform_image(M, first):
     # Open Camera Stream and get RGB image
     pipeline = rs.pipeline()
     config = rs.config()
@@ -100,6 +100,12 @@ def transform_image(M):
     color_frame = frames.get_color_frame()
     color_image = np.asanyarray(color_frame.get_data())
     image_rgb = cv2.cvtColor(color_image, cv2.COLOR_BGR2RGB)
+
+    if first:
+        cv2.imwrite('camera_output_table.jpg', image_rgb)
+    else:
+        cv2.imwrite('camera_output_pickup.jpg', image_rgb)
+        return
 
     dst = cv2.warpPerspective(image_rgb, M, (2 * 520, 2 * 260))
     cv2.imwrite('camera_output.jpg', dst)
