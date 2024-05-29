@@ -19,19 +19,17 @@ arm.connect()
 def find_robot_transformation():
     # top left, top right, bottom left, bottom right
     points = np.float32([[120.6, -250.9], [126, 251.5], [349.4, -255.6], [352.2, 251.2]])
-    projected_size = [520, 1040]  # x and y are flipped in the robot
     border = np.float32([[0, 0], [1040, 0], [0, 520], [1040, 520]])
     return (cv2.getPerspectiveTransform(border, points))
 
 
-def main():
+def main(itt):
     # Run Camera Module, Get the transformation matrix from camera to aruco outline
     #M, top_points = camera_control.detect_aruco()
     #M_table_to_robot = find_robot_transformation()
     #M = camera_control.start()
-
-    while True:
-
+    while itt<2000:
+        itt+=1
         # Save transformed image
         camera_control.transform_image(M, True)
 
@@ -47,6 +45,11 @@ def main():
         centers = []
         for set in range(len(corners)):
             center = np.average(corners[set], axis=0) - h_means[set]
+
+            #Add random noise to the center point
+            center = center + 10 * np.random.random()
+
+
             transformed_points = np.squeeze(cv2.perspectiveTransform(np.array(center).reshape(-1, 1, 2), M_table_to_robot))
             #transformed_points = np.squeeze(cv2.perspectiveTransform(np.array(center).reshape(-1, 1, 2), M_table_to_robot))
             #center_transformed = np.average(transformed_points, axis=0)
@@ -61,7 +64,8 @@ def main():
             randrz = np.random.randint(0, 90)
 
             for center in centers[1:]:
-                flag_close.append((np.abs(randx-center[0]) > 30) and (np.abs(randy-center[1]) > 30))
+                flag_close.append((np.abs(randx-center[0]) < 60) and (np.abs(randx-center[0]) > 30))\
+                              and (np.abs(randy-center[1]) < 60) and (np.abs(randy-center[1]) > 30)
             # for i in range(1, len(centers)):
             #     #print("randx: " + str(randx) + " center x : " + str(centers[i][0]))
             #     flag_close.append( (np.abs(randx-centers[i][0]) > 45) and (np.abs(randy-centers[i][1]) > 70))
@@ -73,25 +77,43 @@ def main():
         row_threshold = int(np.average([top_points[0][1], top_points[1][1]]))
         cols_threshold = np.array([int(top_points[0][0]), int(top_points[1][0])])
 
-        is_picked = block_stack.stack_func(centers[0], rand_place, randrz, row_threshold, cols_threshold)
+        rand_block = np.random.randint(len(centers))
+
+        is_picked = block_stack.stack_func(centers[rand_block], rand_place, randrz, row_threshold, cols_threshold)
         if (is_picked is not None):
             success.append(int(is_picked))
-            np.savetxt('data_'+current_Time+'.csv', np.array(success),  fmt='%i', delimiter=',')
+            np.savetxt('Data/' + current_Time + '/label_'+current_Time+'.csv', np.array(success),  fmt='%i', delimiter=',')
+
+            cv2.imwrite("Data/" + current_Time + "/run_number_" + str(itt)+".jpg", blocks[rand_block])
+            full_img = cv2.imread("camera_output.jpg")
+            #full_img = cv2.cvtColor(full_img, cv2.COLOR_BGR2RGB)
+            # cv2.imshow(cv2.bitwise_not(full_img, blocks[rand_block]))
+            # cv2.waitKey(0)
+            # cv2.destroyAllWindows()
+            cv2.imwrite("Data/" + current_Time + "/run_number_fullimg" + str(itt) + ".jpg", cv2.bitwise_and(full_img,full_img, mask=blocks[rand_block]))
+            picked_centers.append(centers[rand_block])
+            np.savetxt('Data/' + current_Time + '/picked_centers_' + current_Time + '.csv', np.array(picked_centers), fmt='%i', delimiter=',')
+        else:
+            itt -= 1
 
         block_stack.complete_clean()
         block_stack.set_initial_position()
+        return itt
 
 current_Time = str(datetime.now(timezone.utc))[:-13]
+os.mkdir(os.getcwd()+"/Data/"+current_Time)
 success = []
+picked_centers = []
+itt = 0
 
 M, top_points = camera_control.detect_aruco()
 M_table_to_robot = find_robot_transformation()
 
-while (True):
+while itt<2000:
     block_stack.complete_clean()
     block_stack.set_initial_position()
     try:
-        main()
+        itt = main(itt)
     except Exception:
         #TODO: add clean errors and such
         # block_stack.complete_clean()

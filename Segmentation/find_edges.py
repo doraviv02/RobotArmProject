@@ -109,15 +109,6 @@ def classify_box(contour, centroid, M):
     top_parameters = np.array(np.flip(np.array(top_parameters), axis=0))
     top_linesP = np.array(np.flip(np.array(top_linesP), axis=0))
 
-    # blank = np.zeros_like(contour)
-    # for l in top_linesP:
-    #     cv2.line(blank, (l[0], l[1]), (l[2], l[3]), (255, 255, 255), 3, cv2.LINE_AA)
-    # for l in linesP:
-    #     cv2.line(blank, (l[0][0], l[0][1]), (l[0][2], l[0][3]), (255, 255, 255), 3, cv2.LINE_AA)
-    #
-    # cv2.imshow("top", blank)
-    # cv2.waitKey(0)
-    # cv2.destroyAllWindows()
 
     merged_parameters_bottom = merge_similar_lines(parameters, linesP)
     merged_parameters_top = merge_similar_lines(top_parameters, top_linesP)
