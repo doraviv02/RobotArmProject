@@ -47,7 +47,7 @@ def main(itt):
             center = np.average(corners[set], axis=0) - h_means[set]
 
             #Add random noise to the center point
-            center = center + 10 * np.random.random()
+            center = center + 10 * np.random.random((2))
 
 
             transformed_points = np.squeeze(cv2.perspectiveTransform(np.array(center).reshape(-1, 1, 2), M_table_to_robot))
@@ -58,6 +58,7 @@ def main(itt):
             centers.append(transformed_points)
 
         flag_close = []
+        # choosing a new placement point that is far enough from both blocks
         while True:
             randx = np.random.randint(200, 300)
             randy = np.random.randint(-170, 170)

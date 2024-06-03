@@ -101,11 +101,12 @@ def transform_image(M, first):
     color_image = np.asanyarray(color_frame.get_data())
     image_rgb = cv2.cvtColor(color_image, cv2.COLOR_BGR2RGB)
 
-    if first:
+    if first: # save the image before picking up the block
         cv2.imwrite('camera_output_table.jpg', image_rgb)
-    else:
+    else: # save image after picking up the block, to check if successful
         cv2.imwrite('camera_output_pickup.jpg', image_rgb)
         return
 
+    # save the transformed image to be used in the U_2_Net model
     dst = cv2.warpPerspective(image_rgb, M, (2 * 520, 2 * 260))
     cv2.imwrite('camera_output.jpg', dst)
