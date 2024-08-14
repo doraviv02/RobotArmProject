@@ -113,7 +113,7 @@ def run(blocks, M):
             m, b = line[2], line[3]
             top_part, bottom_part = block.copy(), block.copy()
 
-            top_contour, bottom_contour =  contour_list[idx][0].copy(), contour_list[idx][0].copy()
+            top_contour, bottom_contour = contour_list[idx][0].copy(), contour_list[idx][0].copy()
 
             for j in range(len(contour_list[idx][0])-1, -1, -1):
                 point = contour_list[idx][0][j].squeeze()
