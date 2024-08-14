@@ -69,42 +69,16 @@ def main(itt):
         row_threshold = int(np.average([top_points[0][1], top_points[1][1]]))
         cols_threshold = np.array([int(top_points[0][0]), int(top_points[1][0])])
 
-        if len(centers) != 1:
-            rand_noise = 30 * (np.random.random(2)-0.5)
-        else:
-            rand_noise = 0
         rand_noise = 0
         is_picked = block_stack.stack_func(centers[rand_block] + rand_noise, rand_place, randrz, row_threshold, cols_threshold)
-        # if (is_picked is not None):
-        #     success.append(int(is_picked))
-        #     np.savetxt('Data/' + current_Time + '/label_'+current_Time+'.csv', np.array(success),  fmt='%i', delimiter=',')
-        #
-        #     cv2.imwrite("Data/" + current_Time + "/run_number_" + str(itt)+".jpg", blocks[rand_block])
-        #     full_img = cv2.imread("camera_output.jpg")
-        #     #full_img = cv2.cvtColor(full_img, cv2.COLOR_BGR2RGB)
-        #     # cv2.imshow(cv2.bitwise_not(full_img, blocks[rand_block]))
-        #     # cv2.waitKey(0)
-        #     # cv2.destroyAllWindows()
-        #     cv2.imwrite("Data/" + current_Time + "/run_number_fullimg" + str(itt) + ".jpg", cv2.bitwise_and(full_img,full_img, mask=blocks[rand_block]))
-        #     picked_centers.append(centers[rand_block])
-        #     np.savetxt('Data/' + current_Time + '/picked_centers_' + current_Time + '.csv', np.array(picked_centers), fmt='%i', delimiter=',')
-        # else:
-        #     itt -= 1
+
 
         if (is_picked is not None):
             iteration.append([str(int(is_picked)), str(len(centers_pixel)), str(centers[rand_block]), str(centers_pixel[rand_block]), str("Data/" + current_Time + "/run_number_" + str(itt) + ".jpg")])
             df = pd.DataFrame(iteration)
             df.to_csv('Data/' + current_Time + '/_'+current_Time+'.csv',index=False)
-            #np.savetxt('Data/' + current_Time + '/_'+current_Time+'.csv', iteration, delimiter=',')
-
-            # np.savetxt('Data/' + current_Time + '/label_'+current_Time+'.csv', np.array(success),  fmt='%i', delimiter=',')
-            # np.savetxt('Data/' + current_Time + '/picked_centers_' + current_Time + '.csv', np.array(picked_centers), fmt='%i', delimiter=',')
 
             cv2.imwrite("Data/" + current_Time + "/run_number_" + str(itt) + ".jpg", blocks[rand_block])
-            #cv2.output
-            #full_img = cv2.imread("camera_output.jpg")
-            #cv2.imwrite("Data/" + current_Time + "/run_number_fullimg" + str(itt) + ".jpg",
-            #            cv2.bitwise_and(full_img, full_img, mask=blocks[rand_block]))
         else:
             itt -= 1
 
@@ -130,7 +104,4 @@ while itt < 2000:
     try:
         itt = main(itt)
     except Exception:
-        #TODO: add clean errors and such
-        # block_stack.complete_clean()
-        # block_stack.set_initial_position()
         pass

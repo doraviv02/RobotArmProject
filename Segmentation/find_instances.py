@@ -44,12 +44,4 @@ def run(original_image_path, mask_image_path):
             #cv2.imshow("filtered " +str(i) ,new_image)
             segmented.append(mask)
 
-            #print(new_image[new_image[:,:,0]!=0][:,0])
-            #avg_red = np.average(new_image[new_image[:,:,1]!=0][:,1])
-            #print("average green: "+str(avg_red))
-            #cv2.drawMarker(false_colors_draw, (int(centroid[0]), int(centroid[1])),
-                           #color=(255, 255, 255), markerType=cv2.MARKER_CROSS)
-
-    #cv2.waitKey(0)
-
     return segmented
