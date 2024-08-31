@@ -8,17 +8,20 @@ def find_y_diff(center_x, center_y, m, b):
     y_line = m * center_x + b
     return (y_line - center_y)
 
+# used for distance approximation, x distance from center
 def pix2cam(center, M):
     center_in_robotsys = np.squeeze(cv2.perspectiveTransform(np.array(center, dtype=np.float32).reshape(-1, 1, 2), M))
     center_in_camsys = -np.array([center_in_robotsys[0] - 610, center_in_robotsys[1]])  # in mm
     return center_in_camsys
 
+# calculate line slope using two points
 def slope_and_intercept(x1, y1, x2, y2):
     m = (y2 - y1) / (x2 - x1)
     b = y1 - m * x1
     return float(m), float(b)
 
-
+# extracy line parameters using two points
+# parameters are both cartesian and polar (used for different purposes)
 def extract_parameters(x1, y1, x2, y2):
     if (x1 == x2):
         return float(y1), float(0), float(1e10), float(0)
@@ -36,6 +39,7 @@ def extract_parameters(x1, y1, x2, y2):
         return r, theta, m, b
 
 
+# merge similar hough lines together
 def merge_similar_lines(parameters, lines):
     i, j = 0, 0
     merged_lines = []
@@ -67,7 +71,7 @@ def merge_similar_lines(parameters, lines):
 
     return merged_parameters
 
-
+# classify the general box shape between front facing (4/5 sides visible) and angled (6 sides visible)
 def classify_box(contour, centroid, M):
     linesP = cv2.HoughLinesP(contour, 1, np.pi / 180, 30, None, 30, 10)
     parameters = np.array([extract_parameters(*linesP.squeeze(axis=1)[i]) for i in range(len(linesP))])

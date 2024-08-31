@@ -6,7 +6,7 @@ import camera_control
 import Segmentation.U_2_Net.u2net_test as u2net
 import Segmentation.find_instances as find_instances
 import Segmentation.top_finder as top_finder
-import Robot_Control.block_stack as block_stack
+import Robot_Control.robot_control as robot_control
 import sys
 from datetime import datetime, timezone
 from xarm.wrapper import XArmAPI
@@ -39,6 +39,7 @@ def main(itt):
         blocks = find_instances.run("camera_output.jpg", "./Segmentation/camera_output.png")
         corners, h_means = top_finder.run(blocks, M_table_to_robot)
 
+        # get the pixel representing the center of each face of the blocks
         centers_pixel = []
         for i, corner_set in enumerate(corners):
             centers_pixel.append((np.average(corner_set, axis=0) - h_means[i]).astype('int'))
@@ -70,9 +71,9 @@ def main(itt):
         cols_threshold = np.array([int(top_points[0][0]), int(top_points[1][0])])
 
         rand_noise = 0
-        is_picked = block_stack.stack_func(centers[rand_block] + rand_noise, rand_place, randrz, row_threshold, cols_threshold)
+        is_picked = robot_control.pick_place(centers[rand_block] + rand_noise, rand_place, randrz, row_threshold, cols_threshold)
 
-
+        # manage data collection for successful/unsuccessful runs
         if (is_picked is not None):
             iteration.append([str(int(is_picked)), str(len(centers_pixel)), str(centers[rand_block]), str(centers_pixel[rand_block]), str("Data/" + current_Time + "/run_number_" + str(itt) + ".jpg")])
             df = pd.DataFrame(iteration)
@@ -82,8 +83,8 @@ def main(itt):
         else:
             itt -= 1
 
-        block_stack.complete_clean()
-        block_stack.set_initial_position()
+        robot_control.complete_clean()
+        robot_control.set_initial_position()
         return itt
 
 current_Time = str(datetime.now(timezone.utc))[:-13]
@@ -98,9 +99,11 @@ itt = 0
 M, top_points = camera_control.detect_aruco()
 M_table_to_robot = find_robot_transformation()
 
+
+# running loop of the main function for arbitrary 2000 iterations
 while itt < 2000:
-    block_stack.complete_clean()
-    block_stack.set_initial_position()
+    robot_control.complete_clean()
+    robot_control.set_initial_position()
     try:
         itt = main(itt)
     except Exception:

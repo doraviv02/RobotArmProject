@@ -8,6 +8,7 @@ camera_h = 41  # cm
 
 
 def up(points):
+    # extract the 4 points that make up the top face of the box
     xorder = np.argsort(points[:, 0])
     xtemp = points[xorder]
 
@@ -36,6 +37,7 @@ def up(points):
 
 
 def find_centroids(blocks):
+    # find the centroids of each of the blocks using moments
     centroid_list = []
     for block in blocks:
         M = cv2.moments(block)
@@ -46,12 +48,14 @@ def find_centroids(blocks):
 
 
 def pix2cam(center, M):
+    # convert the pixel coordinates of the centroid to the camera coordinate system
     center_in_robotsys = np.squeeze(cv2.perspectiveTransform(np.array(center, dtype=np.float32).reshape(-1, 1, 2), M))
     center_in_camsys = -np.array([center_in_robotsys[0] - 610, center_in_robotsys[1]])  # in mm
     return center_in_camsys
 
 
 def contours(blocks):
+    # find the contours of each of the blocks
     contours = []
     for block in blocks:
         contour, _ = cv2.findContours(block, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
@@ -61,6 +65,7 @@ def contours(blocks):
 
 
 def contour2poly(contour, num_points=6, is_open=True):
+    # approximate the contour to a polygon with num_points vertices
     epsilon = cv2.arcLength(contour, is_open)
     poly = cv2.approxPolyDP(contour, epsilon, is_open)
     count = 0
@@ -74,6 +79,7 @@ def contour2poly(contour, num_points=6, is_open=True):
 
 
 def find_bottom(blocks):
+    # find the bottom of each of the blocks
     new_blocks = []
     for block in blocks:
         new_block = block.copy()
@@ -86,6 +92,7 @@ def find_bottom(blocks):
 
 
 def angles(cam2center, leftvec, rightvec):
+    # find the angles between the camera to center vector and the left and right vectors
     nleftvec = leftvec / np.linalg.norm(leftvec)
     nrightvec = rightvec / np.linalg.norm(rightvec)
     ncam2center = cam2center / np.linalg.norm(cam2center)
@@ -97,6 +104,7 @@ def angles(cam2center, leftvec, rightvec):
 
 
 def run(blocks, M):
+    # run the main calculatiion that returns all the corners used to calculate the top face
     contour_list = contours(blocks)
     centroid_list = find_centroids(blocks)
 
@@ -107,11 +115,13 @@ def run(blocks, M):
         contour_block = np.zeros_like(block)
         contour_block = cv2.drawContours(contour_block, contour_list[idx][0], -1, (255, 255, 255), 3)
 
-        classification, line = find_edges.classify_box(contour_block, centroid_list[idx], M)
 
+        # find the classification of each block using the controur
+        classification, line = find_edges.classify_box(contour_block, centroid_list[idx], M)
+        
+        # front facing block
         if classification == 1:
             m, b = line[2], line[3]
-            top_part, bottom_part = block.copy(), block.copy()
 
             top_contour, bottom_contour = contour_list[idx][0].copy(), contour_list[idx][0].copy()
 
@@ -125,38 +135,30 @@ def run(blocks, M):
             top_contour = np.array(top_contour)
             bottom_contour = np.array(bottom_contour)
 
+            # try to create the polygon using the contours
             poly_top = contour2poly(top_contour, 4, True)
             poly_bottom = contour2poly(bottom_contour, 4, True)
 
             blank = np.zeros_like(block)
             cv2.drawContours(blank, poly_top, -1, (255, 255, 255), 3)
             cv2.drawContours(blank, poly_bottom, -1, (255, 255, 255), 3)
-            # cv2.imshow('First blank', blank)
-            # cv2.waitKey(0)
-            # cv2.destroyAllWindows()
 
             corners_list.append(np.around(poly_top[:, 0]).astype(np.float64).tolist())
             bottom_points = sorted(np.around(poly_bottom[:, 0]).astype(int), key=lambda x: x[0])
             left_points = sorted(bottom_points[:2], key=lambda x: x[1])
             right_points = sorted(bottom_points[2:], key=lambda x: x[1])
             avg_vector = np.multiply((left_points[0] - left_points[1] + right_points[0] - right_points[1]), 0.5)
-            #avg_vector = ((bottom_points[2]+bottom_points[3])-(bottom_points[0]+bottom_points[1]))*0.5
+            
+            # calculate the mean height offset between the top and bottom face (used for center point extraction)
             mean_height_offsets.append(avg_vector)
             blank = np.zeros_like(block)
 
 
-
+        # side facing block
         elif classification == 2:
             poly = contour2poly(contour_list[idx][0])
-            # blank = np.zeros_like(block)
-            # cv2.drawContours(blank, poly, -1, (255, 255, 255), 3)
-            # cv2.imshow('First blank', blank)
-            # cv2.waitKey(0)
-            # cv2.destroyAllWindows()
             poly_corners = np.around(poly[:, 0]).astype(int)
             top, mean_height_offset = up(poly_corners)
-            top_rs = top.reshape((-1, 1, 2)).astype(int)
-            #cv2.fillPoly(blank, [top_rs], (255, 255, 255))
             corners_list.append(top.tolist())
             mean_height_offsets.append(mean_height_offset)
 

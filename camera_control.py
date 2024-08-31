@@ -4,6 +4,8 @@ import cv2
 
 
 def calib(img):
+    # Not used in final implementation
+    # Camera calibration
     dist = np.load('./Camera_Calibration/dist.npy')
     mtx = np.load('./Camera_Calibration/mtx.npy')
     h, w = img.shape[:2]
@@ -39,12 +41,6 @@ def detect_aruco():
 
             if not color_frame and not depth_image:
                 continue
-
-            # Display depth Image
-            # depth_image = np.asanyarray(aligned_depth_frame.get_data())
-            # depth_image = (np.divide(depth_image,np.max(depth_image))*255).astype(np.uint8)
-            # image = cv2.applyColorMap(depth_image, cv2.COLORMAP_PLASMA)
-            # cv2.imshow("Test",image)
 
             # Convert the color frame to a numpy array
             color_image = np.asanyarray(color_frame.get_data())
