@@ -5,7 +5,7 @@ This is our implementation of our Project A in the Technion regarding the integr
 Our system is able to take in a 2D camera input and from it create the bounding box of the system and perform perspective transform.
 It later is able to geometrically reconstruct the 3D cube and predict the ideal pickup position of the blocks.
 
-<img src="https://github.com/doraviv02/RobotArmProject/Prediction.png" width="800">
+<img src="https://github.com/doraviv02/RobotArmProject/blob/main/Prediction.png" width="800">
 
 
 ## Instructions
@@ -14,8 +14,13 @@ The model is from https://drive.google.com/file/d/1ao1ovG1Qtx4b7EoskHXmi2E9rp5CH
 
 To run the code, execute the main function. There are multiple parameters that can be modified regarding the pickup position noise, block margins etc.
 
-<img src="https://github.com/doraviv02/RobotArmProject/Architecture.png" width="800">
+<img src="https://github.com/doraviv02/RobotArmProject/blob/main/Architecture.png" width="800">
 
 ## Citation 
 U2Net Github
+
 https://github.com/xuebinqin/U-2-Net
+
+xArm-Python-SDK
+
+https://github.com/xArm-Developer/xArm-Python-SDK
