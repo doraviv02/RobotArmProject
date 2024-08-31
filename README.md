@@ -1,4 +1,6 @@
 # RobotArmProject
+Dor Aviv & Uri Sadan Yarchi
+
 ## Abstract
 This is our implementation of our Project A in the Technion regarding the integration of a Robotic system for the Pick & Place problem and data collection.
 
